@@ -1,0 +1,17 @@
+The device shows up as a serial port, windows update can get the drivers.
+
+
+Get the badge software from here:
+http://codemania.co.nz/badge.html
+
+You need the 8mb one, install it and run it. It allows you to program the text and images of the LCD.
+
+Use this to capture the serial commands the software sends to program the device:
+http://www.eltima.com/products/serial-port-monitor/
+
+
+
+Other useful References:
+The PDFs on http://codemania.co.nz/badge.html are useful.
+http://zunkworks.com/ProgrammableLEDNameBadges (Sign Three)
+

@@ -1,0 +1,35 @@
+Capture: Uploading "@@@@" as the first message
+
+    0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+  +-----------------------------------------------
+0 |00 02 31 06 00 35 31 41 04 40 40 40 40 00 00 00 	..1..51A.@@@@...
+16|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+32|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+48|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+64|00 00 00 00 00 e2 02 33 01                      	.....â.3.
+
+
+Data Contents:
+
+Intro:
+0: intro byte (always 0)
+
+
+Message (3 + 64 + 1):
+
+    1: Always 2 (unknown)
+    2: Memory address?
+ 3- 4: Memory address (Start at 0x06 0x00, increase by 0x40 (64) each time)
+ 5-68: Data part of the message
+      5: Speed (0x31-0x35, '1'-'5')
+      6: Message index? (First message is 0x31 '1', then 0x32 '2
+      7: Scroll Mode (FIXME: Document, 0x42 - scroll, 0x41 flash, FIXME OTHERS)
+      8: Text message length
+   9-68: Text message goes here! (ascii, there are some special characters, see the app)
+   69: CRC (Sum up all bytes from 3-68, modular the result by 256 to fit it in a byte)
+
+(Untested, but from the packet captures) you can repeat message multiple times to make messages longer than 56 characters, up to 250 chars according to zunkworks.
+
+
+Outro:
+70-72: { 0x02, 0x33, 0x01 }  UNKNOWN
