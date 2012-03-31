@@ -30,8 +30,17 @@ namespace BadgeLib
 
 			return GenerateMultiplePackets(address0, messageIndex, buffer);
 		}
-
-
+		
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="address0">0x31</param>
+		/// <param name="messageIndex">0-1</param>
+		/// <param name="speed"></param>
+		/// <param name="unknown">0x31</param>
+		/// <param name="scrollMode"></param>
+		/// <param name="bitmap">A 12 height monochrome image (currently only up to 12px wide are supported)</param>
+		/// <returns></returns>
 		public static List<byte> GenerateImagePacket(byte address0, int messageIndex, Speed speed, byte unknown, ScrollMode scrollMode, Bitmap bitmap)
 		{
 			List<byte> result = new List<byte>();
@@ -94,6 +103,15 @@ namespace BadgeLib
 					);
 					buffer.Add(b);
 				}
+			}
+
+			//Now throw in 12 rows of hacked pixels, this lets us get in up to 16 pixels above. Not sure wtf these are meant to do...
+			for (int row = 0; row < 12; row++)
+			{
+				int start = buffer.Count - 24;
+
+				buffer.Add((byte) (buffer[start + 1] << 4));
+				buffer.Add(0);
 			}
 
 			//Next lot of 12 pixels has something special
