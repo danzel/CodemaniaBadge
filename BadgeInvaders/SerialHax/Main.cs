@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.IO.Ports;
 using System.Threading;
 using System.Linq;
@@ -11,9 +14,19 @@ namespace SerialHax
 	class MainClass
 	{
 		static SerialPort _port;
-		
-		public static void Main (string[] args)
+
+		public static void Main(string[] args)
 		{
+			List<byte> packet = new List<byte>();
+			
+			packet.Add(0);
+			//packet.AddRange(PacketBuilder.GenerateTextPacket(0x31, 0, PacketBuilder.Speed.S5, 0x31, PacketBuilder.ScrollMode.Rotate, "test"));
+			packet.AddRange(PacketBuilder.GenerateImagePacket(0x31, 0, PacketBuilder.Speed.S5, 0x31, PacketBuilder.ScrollMode.Rotate, (Bitmap)Image.FromFile("12b.png")));
+			packet.AddRange(new byte[] { 2, 0x33, 1 });
+
+			//WritePacket(6, packet);
+			DebugView(packet);
+			return;
 
 			using (var serial = new SerialPort("COM" + 6, 38400, Parity.None, 8, StopBits.One))
 			{
@@ -22,8 +35,10 @@ namespace SerialHax
 
 				SendBytes(new byte[] { 0 }); //init byte
 
-				SendBytes(PacketBuilder.GenerateTextPacket(0x31,0,0x00,PacketBuilder.Speed.S5, 0x31, PacketBuilder.ScrollMode.Rotate, "long message text that is longer than 40 chars i hope maybe it is i think yes...").ToArray());
+				//SendBytes(PacketBuilder.GenerateTextPacket(0x31, 0, PacketBuilder.Speed.S5, 0x31, PacketBuilder.ScrollMode.Rotate, "long message text that is longer than 40 chars i hope maybe it is i think yes...").ToArray());
+				//SendBytes(PacketBuilder.GenerateImagePacket(0x31, 0, PacketBuilder.Speed.S5, 0x31, PacketBuilder.ScrollMode.Rotate).ToArray());
 				SendBytes(new byte[] { 2, 0x33, 1 });
+				
 				return;
 			}
 
@@ -32,11 +47,11 @@ namespace SerialHax
 
 			Thread updateUiThread = new Thread(UiThread);
 			updateUiThread.Start();
-			
+
 			while (true)
 			{
 				var key = Console.ReadKey();
-				
+
 				if (key.Key == ConsoleKey.LeftArrow)
 				{
 					Console.WriteLine("LEFT!");
@@ -45,7 +60,7 @@ namespace SerialHax
 				else if (key.Key == ConsoleKey.RightArrow)
 				{
 					Console.WriteLine("RIGHT!");
-					wantToRight  =true;
+					wantToRight = true;
 				}
 				else if (key.Key == ConsoleKey.Escape)
 				{
@@ -53,35 +68,107 @@ namespace SerialHax
 				}
 				else if (key.Key == ConsoleKey.Spacebar)
 				{
-					wantToShoot = true;	
+					wantToShoot = true;
 				}
-				
+
 				Console.WriteLine("Pressed " + key.Key);
 			}
 		}
-		
+
+		private static void DebugView(List<byte> bytes)
+		{
+			if (File.Exists("out.txt"))
+				File.Delete("out.txt");
+
+			using (var output = new StreamWriter(File.OpenWrite("out.txt")))
+			{
+				for (int i = 0; i < (1 + bytes.Count / 16) * 16; i++)
+				{
+					if (i < bytes.Count)
+						output.Write(bytes[i].ToString("x2") + " ");
+					else
+						output.Write("   ");
+
+					if (i % 16 == 15)
+					{
+						output.Write("\t");
+						for (int j = i - 15; j <= i && j < bytes.Count; j++)
+						{
+							switch (bytes[j])
+							{
+								case 0:
+								case 1:
+								case 2:
+								case 3:
+								case 4:
+								case 5:
+								case 6:
+								case 7:
+								case 8:
+								case 9:
+								case 10:
+								case 11:
+								case 12:
+								case 13:
+								case 14:
+								case 15:
+									output.Write('.');
+									break;
+								case 0x80:
+									output.Write('€');
+									break;
+								case 0x87:
+									output.Write('‡');
+									break;
+								default:
+									output.Write((char) bytes[j]);
+									break;
+							}
+						}
+
+						output.Write("\r\n");
+					}
+				}
+			}
+
+			Process.Start("out.txt");
+		}
+
+		private static void WritePacket(int portNo, List<byte> bytes)
+		{
+			using (var serial = new SerialPort("COM" + portNo, 38400, Parity.None, 8, StopBits.One))
+			{
+				_port = serial;
+				serial.Open();
+
+				SendBytes(bytes.ToArray());
+			}
+		}
+
+
+
 		public static bool[] enemy = new bool[] { true, true, true, true };
 		public static bool[] enemyJustDie = new bool[] { false, false, false, false };
-		
+
 		static bool wantToShoot = false, wantToRight = false, wantToLeft = false;
-		
-		static bool playerShotAlive =false;
+
+		static bool playerShotAlive = false;
 		static int playerShotX, playerShotY;
-		
-		static bool enemyShotAlive =false;
+
+		static bool enemyShotAlive = false;
 		static int enemyShotX, enemyShotY;
-		
+
 		static Random random = new Random();
-		
+
 		static int playerX = 0;
-		
+
 		static bool playerWon = false;
 		static bool playerLose = false;
-		
+
 		public static void RunSimulation()
 		{
 			//Actual sim here
-			
+
 			if ((playerWon || playerLose) && wantToShoot)
 			{
 				playerWon = false;
@@ -89,21 +176,22 @@ namespace SerialHax
 				playerShotAlive = false;
 				enemyShotAlive = false;
 				wantToShoot = false;
-				
-				for (int i = 0; i < 4; i++){
+
+				for (int i = 0; i < 4; i++)
+				{
 					enemy[i] = true;
 					enemyJustDie[i] = false;
 				}
 			}
-			
+
 			if (!enemy.Any(x => x))
 			{
 				playerWon = true;
 			}
-			
-			for (int i =0; i < 4; i++)
+
+			for (int i = 0; i < 4; i++)
 				enemyJustDie[i] = false;
-			
+
 			if (playerShotAlive)
 			{
 				playerShotY--;
@@ -121,14 +209,14 @@ namespace SerialHax
 			if (enemyShotAlive)
 			{
 				enemyShotY++;
-				
+
 				if (enemyShotY > 3)
 					enemyShotAlive = false;
 			}
-			
-			
-			
-			
+
+
+
+
 			if (wantToShoot && !playerShotAlive)
 			{
 				playerShotAlive = true;
@@ -138,35 +226,35 @@ namespace SerialHax
 			if (wantToLeft)
 				playerX = Math.Max(0, playerX - 1);
 			if (wantToRight)
-				playerX = Math.Min (3, playerX + 1);
-			
-					
+				playerX = Math.Min(3, playerX + 1);
+
+
 			if (enemyShotAlive && enemyShotY == 3 && playerX == enemyShotX)
 			{
 				playerLose = true;
 				return;
 			}
 
-			
+
 			if (!enemyShotAlive)
 			{
 				enemyShotAlive = true;
-				enemyShotX = random.Next (4);
+				enemyShotX = random.Next(4);
 				enemyShotY = 1;
 			}
 
-			
+
 			wantToLeft = false;
 			wantToRight = false;
 			wantToShoot = false;
 		}
-		
+
 		public static void UiThread()
 		{
 			while (true)
 			{
 				string[] buffers = new string[4];
-				
+
 				if (playerWon)
 				{
 					for (int i = 0; i < 4; i++)
@@ -182,22 +270,22 @@ namespace SerialHax
 					//Enemies line
 					for (int i = 0; i < 4; i++)
 						buffers[0] += enemy[i] ? "@" : enemyJustDie[i] ? "X" : " ";
-					
+
 					//Shot lines
 					buffers[1] = "    ";
 					buffers[2] = "    ";
-				
-					
-					
+
+
+
 					///Player line
 					for (int i = 0; i < playerX; i++)
 						buffers[3] += " ";
 					buffers[3] += "A";
-					while (buffers[3].Length<4)
+					while (buffers[3].Length < 4)
 						buffers[3] += " ";
-					
+
 					//Add on shots
-						if (playerShotAlive && playerShotY < 4 && playerShotY >= 0)
+					if (playerShotAlive && playerShotY < 4 && playerShotY >= 0)
 					{
 						buffers[playerShotY] = buffers[playerShotY].Substring(0, playerShotX) + "!" + buffers[playerShotY].Substring(playerShotX + 1);
 					}
@@ -206,73 +294,73 @@ namespace SerialHax
 						buffers[enemyShotY] = buffers[enemyShotY].Substring(0, enemyShotX) + "i" + buffers[enemyShotY].Substring(enemyShotX + 1);
 					}
 				}
-				
+
 				//Hack in calls to print all lines to your badges
 				SendTextOnPort(4, buffers[0]);
 				SendTextOnPort(5, buffers[1]);
 				SendTextOnPort(6, buffers[2]);
 				SendTextOnPort(8, buffers[3]);
-				
+
 				Console.Clear();
 				for (int i = 0; i < 4; i++)
 					Console.WriteLine(buffers[i]);
-				Thread.Sleep (TimeSpan.FromSeconds(1));
-				
-				
+				Thread.Sleep(TimeSpan.FromSeconds(1));
+
+
 				//Debug
 				RunSimulation();
 			}
 		}
-		
+
 		public static void SendTextOnPort(int portNumber, string message)
 		{
 			//Checksum is (0x31 + filler + 64 bytes message) % 256
 			byte[] test = new byte[] { 0x31, 0x06, 0, 0x35, 0x31, 0x42, 0x01, 0x61 };
-			
+
 			int s = test.Select(x => (int)x).Sum();
 			int s2 = s % 256;
-			
-			
+
+
 			using (var serial = new SerialPort("COM" + portNumber, 38400, Parity.None, 8, StopBits.One))
 			{
 				_port = serial;
 				serial.Open();
-				
+
 				SendBytes(new byte[] { 0 }); //init byte
-				
+
 				SendText(message);
-				SendBytes (new byte[] { 2, 0x33, 1 });
+				SendBytes(new byte[] { 2, 0x33, 1 });
 				return;
 			}
 		}
-	
+
 		public static void SendText(string msg)
 		{
 			SendBytes(new byte[] { 2 }); //send bytes message
-			
+
 			List<byte> toSend = new List<byte>();
 			toSend.AddRange(new byte[] { 0x31, 0x06, 0x00 });
-			toSend.Add (0x35); //Speed
-			toSend.Add (0x31); //msg speed
-			toSend.Add (0x41);//0x42); //scroll mode
-			toSend.Add ((byte)msg.Length); //length
-			
+			toSend.Add(0x35); //Speed
+			toSend.Add(0x31); //msg speed
+			toSend.Add(0x41);//0x42); //scroll mode
+			toSend.Add((byte)msg.Length); //length
+
 			var msgBytes = Encoding.ASCII.GetBytes(msg);
-			
+
 			toSend.AddRange(msgBytes);
-			while (toSend.Count< 64 + 3)
+			while (toSend.Count < 64 + 3)
 				toSend.Add(0);
-			
+
 			int crc = toSend.Select(x => (int)x).Sum() % 256;
-			
+
 			SendBytes(toSend.ToArray());
 			SendBytes(new byte[] { (byte)crc });
-			
+
 		}
-		
+
 		public static void SendBytes(byte[] toSend)
 		{
-			_port.Write(toSend, 0, toSend.Length);	
+			_port.Write(toSend, 0, toSend.Length);
 		}
 	}
 }

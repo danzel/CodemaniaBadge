@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 
@@ -12,13 +13,12 @@ namespace BadgeLib
 		/// </summary>
 		/// <param name="address0">0x31</param>
 		/// <param name="messageIndex">0+</param>
-		/// <param name="address1">0x00, 0x40, 0x80</param>
 		/// <param name="speed"></param>
 		/// <param name="unknown">0x31</param>
 		/// <param name="scrollMode"></param>
 		/// <param name="text"></param>
 		/// <returns></returns>
-		public static List<byte> GenerateTextPacket(byte address0, int messageIndex, byte address1, Speed speed, byte unknown, ScrollMode scrollMode, string text)
+		public static List<byte> GenerateTextPacket(byte address0, int messageIndex, Speed speed, byte unknown, ScrollMode scrollMode, string text)
 		{
 			List<byte> buffer = new List<byte>();
 			buffer.Add((byte)speed);
@@ -29,6 +29,79 @@ namespace BadgeLib
 			buffer.AddRange(text.Select(c => (byte)c));
 
 			return GenerateMultiplePackets(address0, messageIndex, buffer);
+		}
+
+
+		public static List<byte> GenerateImagePacket(byte address0, int messageIndex, Speed speed, byte unknown, ScrollMode scrollMode, Bitmap bitmap)
+		{
+			List<byte> result = new List<byte>();
+
+
+			List<byte> buffer = new List<byte>();
+			//Scroll mode etc
+			buffer.Add((byte)speed);
+			buffer.Add(unknown);
+			buffer.Add((byte)scrollMode);
+
+			//Say how wide the image is in blocks of 12 pixels
+			int bitmap12PxCount = 1 + (bitmap.Width - 1) / 12;
+
+			buffer.Add((byte)bitmap12PxCount); //Length byte (how many image banks below will be mentioned
+
+			for (int i = 0; i < bitmap12PxCount; i++)
+			{
+				buffer.Add(0x80); //Image
+				buffer.Add((byte)i); //Index
+			}
+
+
+			//Pad the buffer out to be 4 packets long (Desktop programmer does this, but it doesn't appear to be required)
+			//while (buffer.Count < 4 * 64)
+			//	buffer.Add(0);
+
+			result.AddRange(GenerateMultiplePackets(address0, messageIndex, buffer));
+
+
+			//Next packets (image) are special, messageIndex 8!
+			buffer.Clear();
+
+			buffer.AddRange(PackBitmapToBytes(bitmap));
+
+			result.AddRange(GenerateMultiplePackets(address0, 8, buffer));
+
+			return result;
+		}
+
+		private static List<byte> PackBitmapToBytes(Bitmap bitmap)
+		{
+			List<byte> buffer = new List<byte>();
+
+			//Pack 16 pixels from each row into 2 bytes
+			for (int row = 0; row < 12; row++)
+			{
+				for (int c = 0; c < 2; c++)
+				{
+					byte b =
+						(byte)(
+							((c * 8 + 0 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 0, row).GetBrightness() == 0) ? 0x80 : 0x00) |
+							((c * 8 + 1 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 1, row).GetBrightness() == 0) ? 0x40 : 0x00) |
+							((c * 8 + 2 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 2, row).GetBrightness() == 0) ? 0x20 : 0x00) |
+							((c * 8 + 3 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 3, row).GetBrightness() == 0) ? 0x10 : 0x00) |
+							((c * 8 + 4 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 4, row).GetBrightness() == 0) ? 0x08 : 0x00) |
+							((c * 8 + 5 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 5, row).GetBrightness() == 0) ? 0x04 : 0x00) |
+							((c * 8 + 6 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 6, row).GetBrightness() == 0) ? 0x02 : 0x00) |
+							((c * 8 + 7 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 7, row).GetBrightness() == 0) ? 0x01 : 0x00)
+					);
+					buffer.Add(b);
+				}
+			}
+
+			//Next lot of 12 pixels has something special
+			//4 bits of unknown ??? (copy of last 4 bits of last byte)
+			//Pack 16 pixels from each row into 2 bytes (offset by half a byte)
+
+
+			return buffer;
 		}
 
 		/// <summary>
@@ -43,7 +116,7 @@ namespace BadgeLib
 			const int DataBytesInPacket = 64;
 
 			List<byte> result = new List<byte>();
-			int packetsToBuild = 1 + (bytes.Count / DataBytesInPacket);
+			int packetsToBuild = 1 + (bytes.Count - 1) / DataBytesInPacket;
 
 			for (int i = 0; i < packetsToBuild; i++)
 			{

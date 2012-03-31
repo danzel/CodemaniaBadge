@@ -1,0 +1,59 @@
+Capture: Uploading a 12x12 fully black image as the first message
+
+      0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+    +-----------------------------------------------
+0x00|00 02 31 06 00 35 31 42 01 80 00 00 00 00 00 00 	..1..51B.€......
+0x10|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+0x20|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+0x30|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+0x40|00 00 00 00 00 60 02 31 0e 00 ff f0 ff f0 ff f0 	.....`.1..ÿðÿðÿð
+0x50|ff f0 ff f0 ff f0 ff f0 ff f0 ff f0 ff f0 ff f0 	ÿðÿðÿðÿðÿðÿðÿðÿð
+0x60|ff f0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	ÿð..............
+0x70|00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 	................
+0x80|00 00 00 00 00 00 00 00 00 00 73 02 33 01       	..........s.3.
+
+
+Data Contents:
+
+First message (0x01-0x45)
+    1: Always 2 (unknown)
+    2: Memory address
+    3: Message index (6+)
+    4: Memory address (Start at 0x00, increase by 0x40 (64) each time)
+5-0x45: Data part of the message
+      5: Speed (0x31-0x35, '1'-'5')
+      6: Message index? (First message is 0x31 '1', then 0x32 '2
+      7: Scroll Mode (FIXME: Document, 0x42 - scroll, 0x41 flash, FIXME OTHERS)
+      8: width of image in blocks of 12 (1: <= 12 px, 2: <= 24px, etc)
+      9: 0x80, specifies that we are an image
+     10: 0x00, specifies we are image block 0
+(not in above, but example)
+     11: 0x80, image
+     12: 0x01, image block 1
+   0x45: CRC
+
+Second message - Image Data (0x46-0x8A)
+
+0x46: Always 2
+0x47: Memory address (0x31 = first message)
+0x48: Message index (6+8 = 14, first image (only allowed 2))
+0x49: Memory address (Start at 0x00, increase by 0x40 (64) each time)
+0x4A-0x61: Image data.
+
+
+Image data format:
+
+Pack 16 pixels of each row into 2 bytes (true = on)
+byte 0: [ row0,col1 ... row0,col7 ]
+byte 1: [ row0,col8 ... row0,col15 ]
+byte 2: [ row1,col1 ... row1,col7 ]
+byte 4: [ row1,col8 ... row1,col15 ]
+....
+byte 22: [ row11,col1 ... row11,col7 ]
+byte 23: [ row11,col8 ... row11,col15 ]
+
+After the first block of 12 something strange happens, still haven't figured it out.
+
+
+Outro:
+70-72: { 0x02, 0x33, 0x01 }  UNKNOWN
