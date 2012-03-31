@@ -85,6 +85,10 @@ namespace BadgeLib
 		{
 			List<byte> buffer = new List<byte>();
 
+			//Round the width up to the nearest 12
+			int rounded12Width = 12 * (1 + (bitmap.Width - 1) / 12);
+
+			//First 16 pixels are put straight in to bytes
 			//Pack 16 pixels from each row into 2 bytes
 			for (int row = 0; row < 12; row++)
 			{
@@ -105,19 +109,44 @@ namespace BadgeLib
 				}
 			}
 
-			//Now throw in 12 rows of hacked pixels, this lets us get in up to 16 pixels above. Not sure wtf these are meant to do...
+			if (rounded12Width <= 1)
+				return buffer;
+
+			List<byte> tempBuffer = new List<byte>();
+			//Pack 16 pixels from each row into 2 bytes
 			for (int row = 0; row < 12; row++)
 			{
-				int start = buffer.Count - 24;
-
-				buffer.Add((byte) (buffer[start + 1] << 4));
-				buffer.Add(0);
+				for (int c = 2; c < 4; c++)
+				{
+					byte b =
+						(byte)(
+							((c * 8 + 0 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 0, row).GetBrightness() == 0) ? 0x80 : 0x00) |
+							((c * 8 + 1 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 1, row).GetBrightness() == 0) ? 0x40 : 0x00) |
+							((c * 8 + 2 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 2, row).GetBrightness() == 0) ? 0x20 : 0x00) |
+							((c * 8 + 3 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 3, row).GetBrightness() == 0) ? 0x10 : 0x00) |
+							((c * 8 + 4 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 4, row).GetBrightness() == 0) ? 0x08 : 0x00) |
+							((c * 8 + 5 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 5, row).GetBrightness() == 0) ? 0x04 : 0x00) |
+							((c * 8 + 6 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 6, row).GetBrightness() == 0) ? 0x02 : 0x00) |
+							((c * 8 + 7 < bitmap.Width && (int)bitmap.GetPixel(c * 8 + 7, row).GetBrightness() == 0) ? 0x01 : 0x00)
+					);
+					tempBuffer.Add(b);
+				}
 			}
 
-			//Next lot of 12 pixels has something special
-			//4 bits of unknown ??? (copy of last 4 bits of last byte)
-			//Pack 16 pixels from each row into 2 bytes (offset by half a byte)
+			int start = buffer.Count - 24;
 
+			byte carryByte = 0;
+			for (int i = 0; i < tempBuffer.Count; i++)
+			{
+				byte newByte = (byte) (carryByte | tempBuffer[i] >> 4);
+				carryByte = (byte) (tempBuffer[i] << 4);
+
+				if (i % 2 == 0) //Hack every 2nd byte
+					newByte ^= (byte)(buffer[start + i + 1] << 4);
+
+				buffer.Add(newByte);
+			}
+			buffer.Add(carryByte);
 
 			return buffer;
 		}
