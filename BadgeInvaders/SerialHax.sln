@@ -3,16 +3,41 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerialHax", "SerialHax\SerialHax.csproj", "{F7969E55-79DF-41A2-BF4D-E31477DFDD45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BadgeLib", "BadgeLib\BadgeLib.csproj", "{5F8C8414-FA88-4841-8552-FCD155CF01EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Debug|x86.ActiveCfg = Debug|x86
 		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Debug|x86.Build.0 = Debug|x86
+		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Release|Any CPU.ActiveCfg = Release|x86
+		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Release|Mixed Platforms.Build.0 = Release|x86
 		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Release|x86.ActiveCfg = Release|x86
 		{F7969E55-79DF-41A2-BF4D-E31477DFDD45}.Release|x86.Build.0 = Release|x86
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{5F8C8414-FA88-4841-8552-FCD155CF01EB}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = SerialHax\SerialHax.csproj

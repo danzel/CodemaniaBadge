@@ -4,6 +4,7 @@ using System.IO.Ports;
 using System.Threading;
 using System.Linq;
 using System.Text;
+using BadgeLib;
 
 namespace SerialHax
 {
@@ -13,6 +14,22 @@ namespace SerialHax
 		
 		public static void Main (string[] args)
 		{
+
+			using (var serial = new SerialPort("COM" + 6, 38400, Parity.None, 8, StopBits.One))
+			{
+				_port = serial;
+				serial.Open();
+
+				SendBytes(new byte[] { 0 }); //init byte
+
+				SendBytes(PacketBuilder.GenerateTextPacket(0x31,0,0x00,PacketBuilder.Speed.S5, 0x31, PacketBuilder.ScrollMode.Rotate, "long message text that is longer than 40 chars i hope maybe it is i think yes...").ToArray());
+				SendBytes(new byte[] { 2, 0x33, 1 });
+				return;
+			}
+
+			MainClass.SendTextOnPort(6, "1234");
+			return;
+
 			Thread updateUiThread = new Thread(UiThread);
 			updateUiThread.Start();
 			
@@ -194,7 +211,7 @@ namespace SerialHax
 				SendTextOnPort(4, buffers[0]);
 				SendTextOnPort(5, buffers[1]);
 				SendTextOnPort(6, buffers[2]);
-				SendTextOnPort(7, buffers[3]);
+				SendTextOnPort(8, buffers[3]);
 				
 				Console.Clear();
 				for (int i = 0; i < 4; i++)
