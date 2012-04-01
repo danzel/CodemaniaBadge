@@ -10,6 +10,8 @@ Use this to capture the serial commands the software sends to program the device
 http://www.eltima.com/products/serial-port-monitor/
 
 
+Sometimes after uploading images the device stops accepting them. Upload some text and try again to get it to work.
+
 
 Other useful References:
 The PDFs on http://codemania.co.nz/badge.html are useful.

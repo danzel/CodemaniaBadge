@@ -138,9 +138,11 @@ namespace BadgeLib
 			byte carryByte = 0;
 			for (int i = 0; i < tempBuffer.Count; i++)
 			{
+				//Shift each byte right by 4 bits
 				byte newByte = (byte) (carryByte | tempBuffer[i] >> 4);
 				carryByte = (byte) (tempBuffer[i] << 4);
 
+				//XOR each even byte with the lower half of the byte 25 bytes ago (TODO: If you did this before the shift it might make more sense)
 				if (i % 2 == 0) //Hack every 2nd byte
 					newByte ^= (byte)(buffer[start + i + 1] << 4);
 

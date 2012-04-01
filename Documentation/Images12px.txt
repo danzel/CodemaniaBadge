@@ -52,7 +52,7 @@ byte 4: [ row1,col8 ... row1,col15 ]
 byte 22: [ row11,col1 ... row11,col7 ]
 byte 23: [ row11,col8 ... row11,col15 ]
 
-After the first block of 12 something strange happens, still haven't figured it out.
+After the first block of 12 something strange happens, see Images24px for details
 
 
 Outro:
